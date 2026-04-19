@@ -1,0 +1,76 @@
+/**
+ * ================================================================================
+ * DONOT MODIFY THIS FILE. This file is READ ONLY and is DETERMINISTIC.
+ *
+ * AnimateCSS API Service - Animation Control Layer
+ *
+ * This file provides a stable set of functions and types for managing AnimateCSS
+ * animations programmatically. It includes the `animate` function for dynamic
+ * class manipulation and typed interfaces for animation configuration. The AI
+ * builder agent should call `animate` with valid CSS selectors and animation names
+ * (e.g., 'bounce', 'fadeIn') and avoid altering the file's structure or signatures.
+ *
+ * DO NOT alter the file or function contracts.
+ * Any changes void determinism, auditability, and may break system contracts.
+ * ================================================================================
+ */
+
+/**
+ * Configuration options for animations.
+ */
+export interface AnimationConfig {
+  prefix?: string; // Animation class prefix (default: 'animate__')
+  duration?: string; // Custom duration (e.g., '2s')
+  delay?: string; // Custom delay (e.g., '1s')
+  repeat?: number; // Number of repeats (e.g., 2)
+}
+
+/**
+ * Result type for animation completion.
+ */
+export type AnimationResult = string;
+
+/**
+ * Animates an element using AnimateCSS classes with Promise-based cleanup.
+ * @param selector - CSS selector for the target element.
+ * @param animation - Animation name (e.g., 'bounce', 'fadeIn').
+ * @param config - Optional configuration for duration, delay, and repeat.
+ * @returns Promise resolving with a status message.
+ */
+export function animate(
+  selector: string,
+  animation: string,
+  config: AnimationConfig = {}
+): Promise<AnimationResult> {
+  const { prefix = 'animate__', duration, delay, repeat } = config;
+  return new Promise((resolve) => {
+    const node = document.querySelector(selector);
+    if (!node) {
+      resolve('Element not found');
+      return;
+    }
+
+    const animationName = `${prefix}${animation}`;
+    node.classList.add(`${prefix}animated`, animationName);
+
+    if (duration) node.style.setProperty('--animate-duration', duration);
+    if (delay) node.style.setProperty('--animate-delay', delay);
+    if (repeat) node.style.setProperty('--animate-repeat', repeat.toString());
+
+    const handleAnimationEnd = (event: AnimationEvent) => {
+      event.stopPropagation();
+      node.classList.remove(`${prefix}animated`, animationName);
+      resolve('Animation ended');
+    };
+
+    node.addEventListener('animationend', handleAnimationEnd, { once: true });
+  });
+}
+
+/**
+ * Utility function to check if animations are disabled via prefers-reduced-motion.
+ * @returns boolean indicating if motion is reduced.
+ */
+export function isMotionReduced(): boolean {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
